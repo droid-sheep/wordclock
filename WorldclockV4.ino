@@ -189,9 +189,9 @@ IotWebConfSelectParameter config_st_param = IotWebConfSelectParameter("Sommerzei
 IotWebConfSelectParameter config_dim_param = IotWebConfSelectParameter("Dimmeffekt", "dim", config_dim, STRING_LEN, (char*)config_dim_values, (char*)config_dim_names, sizeof(config_dim_values) / STRING_LEN, STRING_LEN);
 
 IotWebConfSelectParameter config_sm_act_param = IotWebConfSelectParameter("Schafmodus aktiv", "sm_act", config_st, STRING_LEN, (char*)config_sm_act_values, (char*)config_sm_act_names, sizeof(config_sm_act_values) / STRING_LEN, STRING_LEN);
-IotWebConfNumberParameter config_ss_param = IotWebConfNumberParameter("Beginn", "config_ss", config_ss, NUMBER_LEN, "0", "0..23", "min='0' max='23' step='1'");
-IotWebConfNumberParameter config_se_param = IotWebConfNumberParameter("Ende", "config_se", config_se, NUMBER_LEN, "0", "0..23", "min='0' max='23' step='1'");
-IotWebConfNumberParameter config_sm_param = IotWebConfNumberParameter("Helligkeit", "config_sm", config_sm, NUMBER_LEN, "100", "0..255", "min='0' max='255' step='1'");
+IotWebConfNumberParameter config_ss_param = IotWebConfNumberParameter("Beginn", "ss", config_ss, NUMBER_LEN, "0", "0..23", "min='0' max='23' step='1'");
+IotWebConfNumberParameter config_se_param = IotWebConfNumberParameter("Ende", "se", config_se, NUMBER_LEN, "0", "0..23", "min='0' max='23' step='1'");
+IotWebConfNumberParameter config_sm_param = IotWebConfNumberParameter("Helligkeit", "sm", config_sm, NUMBER_LEN, "100", "0..255", "min='0' max='255' step='1'");
 
 //IotWebConfNumberParameter intParam = IotWebConfNumberParameter("Int param", "intParam", intParamValue, NUMBER_LEN, "20", "1..100", "min='1' max='100' step='1'");
 //IotWebConfSelectParameter chooserParam = IotWebConfSelectParameter("Choose param", "chooseParam", chooserParamValue, STRING_LEN, (char*)chooserValues, (char*)chooserNames, sizeof(chooserValues) / STRING_LEN, STRING_LEN);
@@ -396,12 +396,32 @@ int getHour() {
   return (currentHour + atoi(config_to) + atoi(config_st)) % 12;
 }
 
+int getRealHour(){
+  return (currentHour + atoi(config_to) + atoi(config_st)) % 24;
+}
+
 int getMinute() {
   return currentMinute;
 }
 
 int getBrightness() {
   int brightness = String(config_br).toInt();
+
+  if (atoi(config_sm_act) == 1){
+    int rhour = getRealHour();
+    if(atoi(config_ss) < atoi (config_se)){
+      //a nach b
+    
+      if(rhour >= atoi(config_ss) && rhour <= atoi(config_se)){
+        brightness = atoi(config_sm);
+      }
+    }else{
+      // b nach a (über nacht)
+      if(rhour >= atoi(config_se) || rhour <= atoi(config_ss)){
+        brightness = atoi(config_sm);
+      }
+    }
+  }
 
   if (atoi(config_sm_act) == 1 && ((getHour() <= atoi(config_ss) || getHour() >= atoi(config_se)))) {
     brightness = atoi(config_sm);
